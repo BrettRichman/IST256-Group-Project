@@ -186,3 +186,12 @@ footer {
 button {
     border: 2px solid #001E44;
 }
+
+.json-box {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+}
