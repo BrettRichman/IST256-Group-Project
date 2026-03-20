@@ -1,13 +1,11 @@
 /* AUTH */
 
-/* Redirect to login page if user is not logged in */
 function requireAuth() {
     if (sessionStorage.getItem('isLoggedIn') !== 'true') {
         window.location.href = 'login.html';
     }
 }
 
-/* Log out the user and go to home */
 function logout() {
     sessionStorage.removeItem('isLoggedIn');
     sessionStorage.removeItem('currentUserEmail');
@@ -20,12 +18,12 @@ function logout() {
 function signUp(event) {
     event.preventDefault();
 
-    var name            = document.getElementById('name').value.trim();
-    var email           = document.getElementById('email').value.trim();
-    var phone           = document.getElementById('phone').value.trim();
-    var year            = document.getElementById('year').value.trim();
-    var address         = document.getElementById('address').value.trim();
-    var password        = document.getElementById('password').value;
+    var name = document.getElementById('name').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var phone = document.getElementById('phone').value.trim();
+    var year = document.getElementById('year').value.trim();
+    var address = document.getElementById('address').value.trim();
+    var password = document.getElementById('password').value;
     var confirmPassword = document.getElementById('confirmPassword').value;
 
     if (!name || !email || !year || !address || !password) {
@@ -45,7 +43,7 @@ function signUp(event) {
         return;
     }
 
-    var newMember = { name: name, email: email, phone: phone, year: year, address: address, password: password };
+    var newMember = { name, email, phone, year, address, password };
     members.push(newMember);
     localStorage.setItem('members', JSON.stringify(members));
 
@@ -63,7 +61,7 @@ function login(event) {
     event.preventDefault();
 
     var email = document.getElementById('loginEmail').value.trim();
-    var pass  = document.getElementById('loginPassword').value;
+    var pass = document.getElementById('loginPassword').value;
 
     var members = JSON.parse(localStorage.getItem('members')) || [];
     var user = members.find(function(m) { return m.email === email && m.password === pass; });
@@ -73,50 +71,45 @@ function login(event) {
         sessionStorage.setItem('currentUserEmail', email);
         window.location.href = 'members.html';
     } else {
-        alert('Invalid email or password. Please try again.');
+        alert('Invalid email or password.');
     }
 }
 
 
-/* MEMBERS PAGE */
+/* MEMBERS */
 
 function displayMembers() {
-    var memberTable = document.getElementById('memberTable');
-    if (!memberTable) return;
+    var table = document.getElementById('memberTable');
+    if (!table) return;
 
     var members = JSON.parse(localStorage.getItem('members')) || [];
 
     if (members.length === 0) {
-        memberTable.innerHTML = '<tr><td colspan="4" class="text-center">No members registered yet.</td></tr>';
+        table.innerHTML = '<tr><td colspan="4">No members</td></tr>';
         return;
     }
 
-    memberTable.innerHTML = '';
+    table.innerHTML = '';
 
     for (var i = 0; i < members.length; i++) {
-        var member = members[i];
-        var row = '<tr>' +
-            '<td>' + member.name + '</td>' +
-            '<td>' + (member.phone || 'N/A') + '</td>' +
-            '<td>' + member.email + '</td>' +
-            '<td>' + member.address + '</td>' +
+        var m = members[i];
+        table.innerHTML +=
+            '<tr>' +
+            '<td>' + m.name + '</td>' +
+            '<td>' + (m.phone || 'N/A') + '</td>' +
+            '<td>' + m.email + '</td>' +
+            '<td>' + m.address + '</td>' +
             '</tr>';
-        memberTable.innerHTML += row;
     }
 }
 
 
-/* PRODUCTS PAGE */
+/* PRODUCTS */
 
 var products = [];
 
 function loadProducts() {
-    var stored = localStorage.getItem('products');
-    if (stored) {
-        products = JSON.parse(stored);
-    } else {
-        products = [];
-    }
+    products = JSON.parse(localStorage.getItem('products')) || [];
     displayProducts();
 }
 
@@ -125,7 +118,7 @@ function displayProducts() {
     if (!tbody) return;
 
     if (products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No products yet. Add one above.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7">No products yet</td></tr>';
         return;
     }
 
@@ -133,8 +126,9 @@ function displayProducts() {
 
     for (var i = 0; i < products.length; i++) {
         var p = products[i];
-        var row = document.createElement('tr');
-        row.innerHTML =
+
+        tbody.innerHTML +=
+            '<tr>' +
             '<td>' + p.itemId + '</td>' +
             '<td>' + p.format + '</td>' +
             '<td>' + p.description + '</td>' +
@@ -142,46 +136,41 @@ function displayProducts() {
             '<td>$' + parseFloat(p.price).toFixed(2) + '</td>' +
             '<td>' + (p.additional || '') + '</td>' +
             '<td>' +
-                '<button class="btn btn-sm btn-warning me-1" onclick="editProduct(\'' + p.itemId + '\')">Edit</button>' +
-                '<button class="btn btn-sm btn-danger" onclick="deleteProduct(\'' + p.itemId + '\')">Delete</button>' +
-            '</td>';
-        tbody.appendChild(row);
+            '<button class="btn btn-success btn-sm me-1" onclick="addToCart(\'' + p.itemId + '\')">Add to Cart</button>' +
+            '<button class="btn btn-warning btn-sm me-1" onclick="editProduct(\'' + p.itemId + '\')">Edit</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.itemId + '\')">Delete</button>' +
+            '</td>' +
+            '</tr>';
     }
 }
 
 function addOrUpdateProduct(event) {
     event.preventDefault();
 
-    var itemId      = document.getElementById('itemId').value.trim();
-    var format      = document.getElementById('format').value.trim();
+    var itemId = document.getElementById('itemId').value.trim();
+    var format = document.getElementById('format').value.trim();
     var description = document.getElementById('description').value.trim();
-    var category    = document.getElementById('category').value.trim();
-    var price       = document.getElementById('price').value.trim();
-    var additional  = document.getElementById('additional').value.trim();
+    var category = document.getElementById('category').value.trim();
+    var price = document.getElementById('price').value.trim();
+    var additional = document.getElementById('additional').value.trim();
 
     if (!itemId || !format || !description || !category || !price) {
-        alert('Please fill in all required fields.');
+        alert('Fill all fields');
         return;
     }
 
-    var existing = null;
+    var found = false;
+
     for (var i = 0; i < products.length; i++) {
         if (products[i].itemId === itemId) {
-            existing = products[i];
+            products[i] = { itemId, format, description, category, price, additional };
+            found = true;
             break;
         }
     }
 
-    if (existing) {
-        existing.format      = format;
-        existing.description = description;
-        existing.category    = category;
-        existing.price       = price;
-        existing.additional  = additional;
-        alert('Product updated!');
-    } else {
-        products.push({ itemId: itemId, format: format, description: description, category: category, price: price, additional: additional });
-        alert('Product added!');
+    if (!found) {
+        products.push({ itemId, format, description, category, price, additional });
     }
 
     localStorage.setItem('products', JSON.stringify(products));
@@ -189,48 +178,98 @@ function addOrUpdateProduct(event) {
     document.getElementById('productForm').reset();
 }
 
-function editProduct(itemId) {
+
+/* 🔥 ADD TO CART (FIXED) */
+
+function addToCart(itemId) {
+    var cart = JSON.parse(localStorage.getItem('cart')) || [];
+    var storedProducts = JSON.parse(localStorage.getItem('products')) || [];
+
     var product = null;
-    for (var i = 0; i < products.length; i++) {
-        if (products[i].itemId === itemId) {
-            product = products[i];
+
+    for (var i = 0; i < storedProducts.length; i++) {
+        if (storedProducts[i].itemId === itemId) {
+            product = storedProducts[i];
             break;
         }
     }
-    if (!product) return;
 
-    document.getElementById('itemId').value      = product.itemId;
-    document.getElementById('format').value      = product.format;
-    document.getElementById('description').value = product.description;
-    document.getElementById('category').value    = product.category;
-    document.getElementById('price').value       = product.price;
-    document.getElementById('additional').value  = product.additional || '';
-}
-
-function deleteProduct(itemId) {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-
-    var newList = [];
-    for (var i = 0; i < products.length; i++) {
-        if (products[i].itemId !== itemId) {
-            newList.push(products[i]);
-        }
+    if (!product) {
+        alert("Product not found!");
+        return;
     }
-    products = newList;
 
-    localStorage.setItem('products', JSON.stringify(products));
-    displayProducts();
+    cart.push(product);
+    localStorage.setItem('cart', JSON.stringify(cart));
+
+    alert("Added to cart!");
 }
 
-/* Search filter using jQuery */
+
+/* CART PAGE */
+
+function loadCart() {
+    displayCart();
+}
+
+function displayCart() {
+    var table = document.getElementById('cartTable');
+    if (!table) return;
+
+    var cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    if (cart.length === 0) {
+        table.innerHTML = '<tr><td colspan="4">Cart empty</td></tr>';
+        return;
+    }
+
+    table.innerHTML = '';
+    var total = 0;
+
+    for (var i = 0; i < cart.length; i++) {
+        var item = cart[i];
+        total += parseFloat(item.price);
+
+        table.innerHTML +=
+            '<tr>' +
+            '<td>' + item.format + '</td>' +
+            '<td>' + item.category + '</td>' +
+            '<td>$' + item.price + '</td>' +
+            '<td><button class="btn btn-danger btn-sm" onclick="removeFromCart(' + i + ')">Remove</button></td>' +
+            '</tr>';
+    }
+
+    document.getElementById('totalPrice').innerText = 'Total: $' + total.toFixed(2);
+}
+
+function removeFromCart(index) {
+    var cart = JSON.parse(localStorage.getItem('cart')) || [];
+    cart.splice(index, 1);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    displayCart();
+}
+
+function purchaseCart() {
+    var cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    if (cart.length === 0) {
+        alert('Cart is empty');
+        return;
+    }
+
+    alert('Purchase successful!');
+    localStorage.removeItem('cart');
+    displayCart();
+}
+
+
+/* SEARCH (jQuery) */
+
 $(document).on('keyup', '#searchInput', function() {
     var value = $(this).val().toLowerCase();
+
     $('#productTable tbody tr').each(function() {
-        var rowText = $(this).text().toLowerCase();
-        if (rowText.indexOf(value) > -1) {
-            $(this).show();
-        } else {
-            $(this).hide();
-        }
+        var text = $(this).text().toLowerCase();
+        $(this).toggle(text.indexOf(value) > -1);
     });
 });
