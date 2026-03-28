@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Confirmation - PSU Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+</head>
+<body onload="requireAuth(); loadConfirmation();">
+
+<header>
+    <nav class="navbar navbar-expand-lg container">
+        <a class="navbar-brand text-white fw-bold" href="index.html">PSU Portal</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="products.html">Products</a>
+            <a class="nav-link" href="members.html">Members</a>
+            <a class="nav-link" href="cart.html">Cart</a>
+            <a class="nav-link" href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+</header>
+
+<div class="container mt-5">
+    <h3 class="mb-3">Order Confirmation</h3>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Tutor</th>
+                <th>Course</th>
+                <th>Price</th>
+                <th>Additional Info</th>
+            </tr>
+        </thead>
+        <tbody id="confirmTable"></tbody>
+    </table>
+
+    <h4 id="confirmTotal">Total: $0.00</h4>
+
+    <button class="btn btn-psu mt-3" onclick="finishOrder()">Finish</button>
+</div>
+
+<footer>
+    &copy; 2026 PSU IST Tutor Portal
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
