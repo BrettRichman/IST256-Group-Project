@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="billingApp">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Tutor - PSU Member Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+<body ng-controller="BillingController" onload="requireAuth()">
+
+<header>
+    <nav class="navbar navbar-expand-lg container">
+        <a class="navbar-brand text-white fw-bold" href="index.html">PSU Member Portal</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="index.html">Home</a>
+            <a class="nav-link" href="products.html">Tutors</a>
+            <a class="nav-link" href="cart.html">Selected Tutors</a>
+            <a class="nav-link" href="returns.html">Cancellation Requests</a>
+            <a class="nav-link" href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+</header>
+
+<div class="container mt-5">
+    <div class="card-box">
+        <h3 class="mb-3">Tutor Booking & Billing</h3>
+        <p class="text-muted">
+            Complete the form below to confirm your tutoring request and submit payment details.
+        </p>
+
+        <form name="billingForm" ng-submit="submitBooking()" novalidate>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Student Full Name</label>
+                    <input type="text" class="form-control" ng-model="billing.fullName">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Student Email</label>
+                    <input type="email" class="form-control" ng-model="billing.studentEmail">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Meeting Preference</label>
+                <select class="form-control" ng-model="billing.meetingType">
+                    <option value="">Select Meeting Type</option>
+                    <option>In Person</option>
+                    <option>Zoom / Virtual</option>
+                    <option>Either</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Preferred Meeting Location / Notes</label>
+                <input type="text" class="form-control" ng-model="billing.meetingNotes" placeholder="Library, virtual, Westgate, etc.">
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Card Number</label>
+                    <input type="text" class="form-control" ng-model="billing.cardNumber" placeholder="16 digits">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Expiration Date</label>
+                    <input type="text" class="form-control" ng-model="billing.expirationDate" placeholder="MM/YY">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Security Code</label>
+                    <input type="text" class="form-control" ng-model="billing.cvv" placeholder="3 digits">
+                </div>
+            </div>
+
+            <h4 class="mt-4">Selected Tutors</h4>
+            <table class="table table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>Tutor Name</th>
+                        <th>Course / Subject</th>
+                        <th>Contact</th>
+                        <th>Availability</th>
+                        <th>Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="item in cart">
+                        <td>{{ item.format }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.email }}</td>
+                        <td>{{ item.hours }}</td>
+                        <td>${{ item.price }}</td>
+                    </tr>
+                    <tr ng-if="cart.length === 0">
+                        <td colspan="5" class="text-center">No tutors selected</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h5>Total Session Cost: ${{ total.toFixed(2) }}</h5>
+
+            <p class="text-danger mt-3">{{ errorMessage }}</p>
+            <p class="text-success mt-3">{{ successMessage }}</p>
+
+            <button type="submit" class="btn btn-psu mt-2">Confirm Tutor Booking</button>
+        </form>
+    </div>
+</div>
+
+<footer>
+    &copy; 2026 Penn State Member Portal &mdash; IST256 Group Project
+</footer>
+
+<script src="script.js"></script>
+<script>
+var app = angular.module('billingApp', []);
+
+app.controller('BillingController', function($scope, $http) {
+    $scope.cart = JSON.parse(localStorage.getItem('cart')) || [];
+    $scope.total = 0;
+    $scope.errorMessage = "";
+    $scope.successMessage = "";
+
+    $scope.billing = {
+        fullName: "",
+        studentEmail: "",
+        meetingType: "",
+        meetingNotes: "",
+        cardNumber: "",
+        expirationDate: "",
+        cvv: ""
+    };
+
+    for (var i = 0; i < $scope.cart.length; i++) {
+        $scope.total += parseFloat($scope.cart[i].price || 0);
+    }
+
+    $scope.submitBooking = function() {
+        $scope.errorMessage = "";
+        $scope.successMessage = "";
+
+        if ($scope.cart.length === 0) {
+            $scope.errorMessage = "Please select at least one tutor before submitting billing.";
+            return;
+        }
+
+        if (
+            !$scope.billing.fullName ||
+            !$scope.billing.studentEmail ||
+            !$scope.billing.meetingType ||
+            !$scope.billing.cardNumber ||
+            !$scope.billing.expirationDate ||
+            !$scope.billing.cvv
+        ) {
+            $scope.errorMessage = "Please complete all required fields.";
+            return;
+        }
+
+        if (!/^\S+@\S+\.\S+$/.test($scope.billing.studentEmail)) {
+            $scope.errorMessage = "Please enter a valid student email address.";
+            return;
+        }
+
+        if (!/^\d{16}$/.test($scope.billing.cardNumber)) {
+            $scope.errorMessage = "Card number must be exactly 16 digits.";
+            return;
+        }
+
+        if (!/^\d{2}\/\d{2}$/.test($scope.billing.expirationDate)) {
+            $scope.errorMessage = "Expiration date must be in MM/YY format.";
+            return;
+        }
+
+        if (!/^\d{3}$/.test($scope.billing.cvv)) {
+            $scope.errorMessage = "Security code must be exactly 3 digits.";
+            return;
+        }
+
+        var bookingData = {
+            studentName: $scope.billing.fullName,
+            studentEmail: $scope.billing.studentEmail,
+            meetingType: $scope.billing.meetingType,
+            meetingNotes: $scope.billing.meetingNotes,
+            paymentMethod: {
+                cardNumber: "**** **** **** " + $scope.billing.cardNumber.slice(-4),
+                expirationDate: $scope.billing.expirationDate,
+                cvv: "***"
+            },
+            tutorsRequested: $scope.cart,
+            totalAmount: $scope.total,
+            bookingStatus: "Pending Confirmation"
+        };
+
+        $http.post('http://localhost:3000/api/billing', bookingData)
+            .then(function(response) {
+                $scope.successMessage = "Tutor booking submitted successfully!";
+                localStorage.setItem('recentOrder', JSON.stringify($scope.cart));
+                localStorage.removeItem('cart');
+
+                setTimeout(function() {
+                    window.location.href = 'confirmation.html';
+                }, 1000);
+            })
+            .catch(function(error) {
+                if (error.data && error.data.message) {
+                    $scope.errorMessage = error.data.message;
+                } else {
+                    $scope.errorMessage = "Unable to submit tutor booking.";
+                }
+                console.log(error);
+            });
+    };
+});
+</script>
+
+</body>
+</html>
