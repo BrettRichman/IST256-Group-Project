@@ -27,9 +27,14 @@ function writeJsonFile(filePath, data) {
 app.post('/api/billing', (req, res) => {
     const billingData = req.body;
 
-    if (!billingData.fullName || !billingData.address || !billingData.cardNumber) {
-        return res.status(400).json({ message: 'Missing required billing fields' });
-    }
+   if (
+    !billingData.studentName ||
+    !billingData.studentEmail ||
+    !billingData.paymentMethod ||
+    !billingData.paymentMethod.cardNumber
+) {
+    return res.status(400).json({ message: 'Missing required billing fields' });
+}
 
     const existing = readJsonFile(billingFile);
     existing.push({
