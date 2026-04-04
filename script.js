@@ -284,18 +284,11 @@ function purchaseCart() {
     var cart = JSON.parse(localStorage.getItem('cart')) || [];
 
     if (cart.length === 0) {
-        alert('Cart is empty');
+        alert('No tutors selected.');
         return;
     }
 
-    // Store cart temporarily for the confirmation page
-    localStorage.setItem('recentOrder', JSON.stringify(cart));
-
-    // Clear the cart
-    localStorage.removeItem('cart');
-
-    // Redirect to confirmation page
-    window.location.href = 'confirmation.html';
+    window.location.href = 'billing.html';
 }
 
 // Load order into confirmation page

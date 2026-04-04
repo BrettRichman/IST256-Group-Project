@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="returnsApp">
+<head>
+    <meta charset="UTF-8">
+    <title>Cancellation / Refund Request - PSU Member Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+<body ng-controller="ReturnsController" onload="requireAuth()">
+
+<header>
+    <nav class="navbar navbar-expand-lg container">
+        <a class="navbar-brand text-white fw-bold" href="index.html">PSU Member Portal</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="index.html">Home</a>
+            <a class="nav-link" href="products.html">Tutors</a>
+            <a class="nav-link" href="cart.html">Selected Tutors</a>
+            <a class="nav-link" href="billing.html">Booking & Billing</a>
+            <a class="nav-link" href="#" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+</header>
+
+<div class="container mt-5">
+    <div class="card-box">
+        <h3 class="mb-3">Tutor Session Cancellation / Refund Request</h3>
+        <p class="text-muted">
+            Use this page to request cancellation or a refund for a tutor session.
+        </p>
+
+        <div class="mb-3">
+            <input type="text" id="returnSearch" class="form-control" placeholder="Search tutor by name, subject, or email...">
+        </div>
+
+        <table class="table table-bordered" id="returnsTable">
+            <thead>
+                <tr>
+                    <th>Tutor Name</th>
+                    <th>Course / Subject</th>
+                    <th>Contact</th>
+                    <th>Rate</th>
+                    <th>Reason for Cancellation / Refund</th>
+                    <th>Session Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="item in products">
+                    <td>{{ item.format }}</td>
+                    <td>{{ item.description }}</td>
+                    <td>{{ item.email }}</td>
+                    <td>${{ item.price }}</td>
+                    <td>
+                        <input type="text" class="form-control" ng-model="item.returnReason" placeholder="Scheduling conflict, no longer needed, etc.">
+                    </td>
+                    <td>
+                        <select class="form-control" ng-model="item.sessionStatus">
+                            <option value="">Select Status</option>
+                            <option>Not Yet Started</option>
+                            <option>Scheduled</option>
+                            <option>Completed</option>
+                            <option>Missed Session</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" ng-click="submitReturn(item)">Request</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="text-danger mt-3">{{ errorMessage }}</p>
+        <p class="text-success mt-3">{{ successMessage }}</p>
+    </div>
+</div>
+
+<footer>
+    &copy; 2026 Penn State Member Portal &mdash; IST256 Group Project
+</footer>
+
+<script src="script.js"></script>
+<script>
+var returnApp = angular.module('returnsApp', []);
+
+returnApp.controller('ReturnsController', function($scope, $http) {
+    $scope.products = JSON.parse(localStorage.getItem('products')) || [];
+    $scope.errorMessage = "";
+    $scope.successMessage = "";
+
+    $scope.submitReturn = function(item) {
+        $scope.errorMessage = "";
+        $scope.successMessage = "";
+
+        if (!item.returnReason || !item.sessionStatus) {
+            $scope.errorMessage = "Please provide a reason and session status before submitting.";
+            return;
+        }
+
+        var returnData = {
+            tutorName: item.format,
+            subject: item.description,
+            tutorEmail: item.email,
+            sessionRate: item.price,
+            reason: item.returnReason,
+            sessionStatus: item.sessionStatus,
+            requestType: "Tutor Cancellation / Refund Request"
+        };
+
+        $http.post('http://localhost:3000/api/returns', returnData)
+            .then(function(response) {
+                $scope.successMessage = "Cancellation/refund request submitted for " + item.format;
+                item.returnReason = "";
+                item.sessionStatus = "";
+            })
+            .catch(function(error) {
+                if (error.data && error.data.message) {
+                    $scope.errorMessage = error.data.message;
+                } else {
+                    $scope.errorMessage = "Unable to submit return request.";
+                }
+                console.log(error);
+            });
+    };
+});
+
+$(document).on('keyup', '#returnSearch', function() {
+    var value = $(this).val().toLowerCase();
+
+    $('#returnsTable tbody tr').each(function() {
+        var text = $(this).text().toLowerCase();
+        $(this).toggle(text.indexOf(value) > -1);
+    });
+});
+</script>
+
+</body>
+</html>
