@@ -254,6 +254,11 @@ app.delete('/api/returns/:id', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running → http://localhost:${PORT}`);
+db.init().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Server running → http://localhost:${PORT}`);
+    });
+}).catch(err => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
 });
