@@ -85,7 +85,10 @@
 var returnApp = angular.module('returnsApp', []);
 
 returnApp.controller('ReturnsController', function($scope, $http) {
-    $scope.products = JSON.parse(localStorage.getItem('products')) || [];
+    $scope.products =
+    JSON.parse(localStorage.getItem('recentOrder')) ||
+    JSON.parse(localStorage.getItem('cart')) ||
+    [];
     $scope.errorMessage = "";
     $scope.successMessage = "";
 
@@ -99,14 +102,10 @@ returnApp.controller('ReturnsController', function($scope, $http) {
         }
 
         var returnData = {
-            tutorName: item.format,
-            subject: item.description,
-            tutorEmail: item.email,
-            sessionRate: item.price,
-            reason: item.returnReason,
-            sessionStatus: item.sessionStatus,
-            requestType: "Tutor Cancellation / Refund Request"
-        };
+    productName: item.format,
+    reason: item.returnReason,
+    condition: item.sessionStatus
+};
 
         $http.post('http://localhost:3000/api/returns', returnData)
             .then(function(response) {
